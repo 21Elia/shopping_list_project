@@ -6,4 +6,8 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(ShoppingListApp main.cpp
         Subject.h
         Subject.cpp
-        Observer.cpp)
+        Observer.cpp
+        Item.h
+        Item.cpp
+        ShoppingList.h
+        ShoppingList.cpp)
