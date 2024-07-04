@@ -16,6 +16,7 @@ public:
     void addItem(const Item& item);
     void removeItem(const std::string& name);
     void printDetails();
+    int getNumItems() const;
 
     bool isInList(const Item& givenItem);
 

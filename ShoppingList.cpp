@@ -56,3 +56,11 @@ void ShoppingList::subscribe(Observer *o) {
 void ShoppingList::unsubscribe(Observer *o) {
     observers.remove(o);
 }
+
+int ShoppingList::getNumItems() const {
+    int total = 0;
+    for (const auto& item : items){
+        total += item.getQuantity();
+    }
+    return total;
+}
