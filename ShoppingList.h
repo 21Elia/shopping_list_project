@@ -12,6 +12,7 @@
 
 class ShoppingList : public Subject {
 public:
+    explicit ShoppingList(std::string name) : name(name) {}
 
     void addItem(const Item& item);
     void removeItem(const std::string& name);
@@ -25,6 +26,7 @@ public:
     void unsubscribe(Observer* o) override;
 
 private:
+    std::string name;
     std::vector<Item> items;
     std::list<Observer*> observers;
 };

@@ -33,6 +33,7 @@ void ShoppingList::printDetails() {
     for(const auto& item : items) {
         std::cout << item.getName() << ": " << item.getQuantity() << "\n" << std::endl;
     }
+    std::cout << "Total Items: " << getNumItems() << std::endl;
 }
 
 bool ShoppingList::isInList(const Item &givenItem) {

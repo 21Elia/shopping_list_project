@@ -10,7 +10,7 @@
 class Item {
 public:
 
-    explicit Item(std::string& name, std::string& category, int num) : name(name), category(category),
+    explicit Item(std::string name, std::string category, int num = 1) : name(name), category(category),
                                                                        quantity(num) {}
     void setName(std::string n) {name = n;}
     void setCategory(std::string category) {category = category;}
