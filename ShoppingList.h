@@ -25,6 +25,9 @@ public:
     void subscribe(Observer* o) override;
     void unsubscribe(Observer* o) override;
 
+    std::string getName() const {return name;}
+    Item getItem(std::string name) const;
+
 private:
     std::string name;
     std::vector<Item> items;

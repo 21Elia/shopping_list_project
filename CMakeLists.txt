@@ -19,6 +19,7 @@ add_executable(ShoppingListApp main.cpp
         MainFrame.h
         MainFrame.cpp
         App.h
-        App.cpp)
+        App.cpp
+        User.cpp)
 
 target_link_libraries(ShoppingListApp ${wxWidgets_LIBRARIES})

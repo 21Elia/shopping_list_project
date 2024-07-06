@@ -14,8 +14,8 @@ void ShoppingList::addItem(const Item &item) {
 void ShoppingList::removeItem(const std::string& name) {
     bool found = false;
     auto it = items.begin();
-    while (it != items.end()) {
-        if ( (*it).getName() == name) {
+    while(it != items.end()) {
+        if( (*it).getName() == name ) {
             found = true;
             break;
         }
@@ -46,7 +46,7 @@ bool ShoppingList::isInList(const Item &givenItem) {
 }
 
 void ShoppingList::notify() {
-    for (const auto& observer : observers)
+    for(const auto& observer : observers)
         observer->update();
 }
 
@@ -60,8 +60,22 @@ void ShoppingList::unsubscribe(Observer *o) {
 
 int ShoppingList::getNumItems() const {
     int total = 0;
-    for (const auto& item : items){
+    for(const auto& item : items){
         total += item.getQuantity();
     }
     return total;
+}
+
+Item ShoppingList::getItem(std::string name) const {
+    auto it = items.begin();
+    while(it != items.end()) {
+        if(name == (*it).getName()) {
+            break;
+        }
+        it++;
+    }
+    if(it != items.end())
+        return (*it);
+    else
+        throw std::invalid_argument("Item not found. Try again.");
 }
