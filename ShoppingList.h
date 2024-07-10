@@ -12,7 +12,7 @@
 
 class ShoppingList : public Subject {
 public:
-    explicit ShoppingList(std::string name) : name(name) {}
+    explicit ShoppingList(std::string name) : name(std::move(name)) {}
 
     void addItem(const Item& item);
     void removeItem(const std::string& name);

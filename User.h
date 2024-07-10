@@ -19,6 +19,11 @@ public:
     void addShoppingList(const std::shared_ptr<ShoppingList>& list);
 
     void removeShoppingList(const std::string& name);
+
+    std::string getUsername() const {return username;}
+
+    std::list<std::shared_ptr<ShoppingList>> getShoppingList() const {return shoppinglists;}
+
 private:
     std::string username;
     std::list<std::shared_ptr<ShoppingList>> shoppinglists;
