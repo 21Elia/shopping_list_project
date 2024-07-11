@@ -16,36 +16,38 @@ enum IDs {
 MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
     setupUserMenu();
     setupListsMenu();
-    setupEditMenu();
+    setupItemsMenu();
     bindEventHandlers();
 
-    // Setup the frame sizer
+    // setting up the frame sizer
 
     wxBoxSizer* frameSizer = new wxBoxSizer(wxVERTICAL);
     frameSizer->Add(userPanel, wxSizerFlags().Proportion(1).Expand());
     frameSizer->Add(listsPanel, wxSizerFlags().Proportion(1).Expand());
-    frameSizer->Add(editPanel, wxSizerFlags().Proportion(1).Expand());
-    //SetSizerAndFit(frameSizer);
+    frameSizer->Add(itemsPanel, wxSizerFlags().Proportion(1).Expand());
+
     wxGridSizer* outerSizer = new wxGridSizer(1);
     outerSizer->Add(frameSizer,wxSizerFlags().Border(wxALL, 75).Expand());
     SetSizerAndFit(outerSizer);
 
+
     listsPanel->Hide();
-    editPanel->Hide();
+    itemsPanel->Hide();
 }
 
 void MainFrame::setupUserMenu() {
     userPanel = new wxPanel(this);
 
     newUserText = new wxStaticText(userPanel, wxID_ANY, "Add a new user");
-    newUserText->SetFont(wxFontInfo(wxSize(0,18)).Bold());
+    newUserText->SetFont(wxFontInfo(wxSize(0,24)).Bold());
 
     userInputField = new wxTextCtrl(userPanel, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+    userInputField->SetFont(wxFontInfo(wxSize(0,18)));
     addUserButton = new wxButton(userPanel, wxID_ANY, "Add");
 
     selectUserText = new wxStaticText(userPanel, wxID_ANY,"Select a user");
-    selectUserText->SetFont(wxFontInfo(wxSize(0,20)).Bold());
+    selectUserText->SetFont(wxFontInfo(wxSize(0,24)).Bold());
 
     userListBox = new wxListBox(userPanel, wxID_ANY);
 
@@ -64,7 +66,7 @@ void MainFrame::setupUserMenuSizers() {
     inputSizer->Add(addUserButton, wxSizerFlags().Proportion(0));
 
     mainSizer->Add(inputSizer, wxSizerFlags().Expand());
-    mainSizer->AddSpacer(50);
+    mainSizer->AddSpacer(25);
     mainSizer->Add(selectUserText, wxSizerFlags().CenterHorizontal());
     mainSizer->AddSpacer(25);
     mainSizer->Add(userListBox, wxSizerFlags().Expand().Proportion(1));
@@ -74,7 +76,7 @@ void MainFrame::setupUserMenuSizers() {
 
 void MainFrame::setupListsMenu() {
     wxFont headlineFont(wxFontInfo(wxSize(0,36)).Bold());
-    wxFont inputFont(wxFontInfo(wxSize(0,20)));
+    wxFont inputFont(wxFontInfo(wxSize(0,18)));
     wxFont buttonFont(wxFontInfo(wxSize(0,14)));
 
     listsPanel = new wxPanel(this);
@@ -123,41 +125,45 @@ void MainFrame::setupListsMenuSizers() {
     listsPanel->SetSizer(mainSizer);
 }
 
-void MainFrame::setupEditMenu() {
+void MainFrame::setupItemsMenu() {
     wxFont headlineFont(wxFontInfo(wxSize(0,36)).Bold());
     wxFont inputFont(wxFontInfo(wxSize(0,20)));
     wxFont buttonFont(wxFontInfo(wxSize(0,14)));
 
-    editPanel = new wxPanel(this);
+    itemsPanel = new wxPanel(this);
 
-    backItemsButton = new wxButton(editPanel, wxID_ANY, "Back");
+    backItemsButton = new wxButton(itemsPanel, wxID_ANY, "Back");
     backItemsButton->SetFont(buttonFont);
 
-    headlineEditMenuText = new wxStaticText(editPanel, wxID_ANY, "Add or Delete Items");
-    headlineEditMenuText->SetFont(headlineFont);
+    headlineItemsMenuText = new wxStaticText(itemsPanel, wxID_ANY, "Add or Delete Items");
+    headlineItemsMenuText->SetFont(headlineFont);
 
-    newItemText = new wxStaticText(editPanel, wxID_ANY, "New Item");
+    newItemText = new wxStaticText(itemsPanel, wxID_ANY, "New Item");
     newItemText->SetFont(wxFontInfo(wxSize(0,20)).Bold());
 
-    itemInputField = new wxTextCtrl(editPanel, wxID_ANY, "",
+    itemInputField = new wxTextCtrl(itemsPanel, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     itemInputField->SetFont(inputFont);
 
-    addItemButton = new wxButton(editPanel, wxID_ANY, "Add");
+    spinCtrl = new wxSpinCtrl(itemsPanel, wxID_ANY, "",wxDefaultPosition,wxDefaultSize,
+                              wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 1, 100, 1);
+
+    addItemButton = new wxButton(itemsPanel, wxID_ANY, "Add");
     addItemButton->SetFont(buttonFont);
 
-    itemCheckListBox = new wxCheckListBox(editPanel, wxID_ANY);
+    itemCheckListBox = new wxCheckListBox(itemsPanel, wxID_ANY);
+    quantityListBox = new wxListBox(itemsPanel, wxID_ANY, wxDefaultPosition, wxSize(40,-1));
 
-    setupEditMenuSizers();
-    //editPanel->Hide();
+    setupItemsMenuSizers();
+    //itemsPanel->Hide();
 
 }
 
-void MainFrame::setupEditMenuSizers() {
+void MainFrame::setupItemsMenuSizers() {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
     mainSizer->AddSpacer(25);
-    mainSizer->Add(headlineEditMenuText, wxSizerFlags().CenterHorizontal());
+    mainSizer->Add(headlineItemsMenuText, wxSizerFlags().CenterHorizontal());
     mainSizer->AddSpacer(25);
 
     wxBoxSizer* inputSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -165,27 +171,45 @@ void MainFrame::setupEditMenuSizers() {
     inputSizer->AddSpacer(10);
     inputSizer->Add(itemInputField, wxSizerFlags().Proportion(1));
     inputSizer->AddSpacer(10);
+    inputSizer->Add(spinCtrl, wxSizerFlags().Proportion(0));
+    inputSizer->AddSpacer(10);
     inputSizer->Add(addItemButton, wxSizerFlags().Proportion(0));
 
     mainSizer->Add(inputSizer, wxSizerFlags().Expand());
     mainSizer->AddSpacer(10);
-    mainSizer->Add(itemCheckListBox, wxSizerFlags().Expand().Proportion(1));
 
-    editPanel->SetSizer(mainSizer);
+    wxBoxSizer* listSizer = new wxBoxSizer(wxHORIZONTAL);
+    listSizer->AddSpacer(97);
+    listSizer->Add(itemCheckListBox, wxSizerFlags().Proportion(1));
+    listSizer->AddSpacer(5);
+    listSizer->Add(quantityListBox, wxSizerFlags().Proportion(0));
+    listSizer->AddSpacer(110);
+    mainSizer->Add(listSizer, wxSizerFlags().Expand());
+    //mainSizer->Add(itemCheckListBox, wxSizerFlags().Expand().Proportion(1));
+
+    itemsPanel->SetSizer(mainSizer);
 }
 
 void MainFrame::bindEventHandlers() {
 
+    // user menu controls binds
     addUserButton->Bind(wxEVT_BUTTON, &MainFrame::onAddUserButtonClicked, this);
     userInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onUserInputEnter, this);
     userListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onUserListKeyDown, this);
     userListBox->Bind(wxEVT_LEFT_DCLICK, &MainFrame::onUserListDoubleClick, this);
 
     addListButton->Bind(wxEVT_BUTTON, &MainFrame::onAddListButtonClicked, this);
-    listInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onInputEnter, this);
+    listInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onListInputEnter, this);
     listBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onListKeyDown, this);
     listBox->Bind(wxEVT_LEFT_DCLICK, &MainFrame::onListDoubleClick, this);
     backListsButton->Bind(wxEVT_BUTTON, &MainFrame::onBackListsButtonClicked, this);
+
+    // items menu control binds
+    backItemsButton->Bind(wxEVT_BUTTON, &MainFrame::onBackItemsButtonClicked, this);
+    addItemButton->Bind(wxEVT_BUTTON, &MainFrame::onAddItemButtonClicked, this);
+    itemInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
+    spinCtrl->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
+    itemCheckListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onItemCheckListKeyDown, this);
 }
 
 void MainFrame::onAddUserButtonClicked(wxCommandEvent &evt) {
@@ -213,17 +237,15 @@ void MainFrame::onUserListKeyDown(wxKeyEvent &evt) {
         case WXK_MACOS_DELETE:
             if (index != wxNOT_FOUND) {
                 std::string username = userListBox->GetString(index).ToStdString();
-                auto it = findUser(username);
-                if (it != users.end()) {
-                    users.erase(it);
-                    userListBox->Delete(index);
-                }
+                auto it = getUser(username);
+                users.erase(it);
+                userListBox->Delete(index);
             }
             break;
     }
 }
 
-std::vector<User>::iterator MainFrame::findUser(const std::string &username) {
+std::vector<User>::iterator MainFrame::getUser(const std::string &username) {
     auto it = users.begin();
     while(it != users.end()) {
         if((*it).getUsername() == username)
@@ -237,12 +259,13 @@ void MainFrame::onUserListDoubleClick(wxMouseEvent &evt) {
     int index = userListBox->GetSelection();
     if(index != wxNOT_FOUND) {
         std::string username = userListBox->GetString(index).ToStdString();
-        selectedUser = &( *(findUser(username)) );
+        selectedUser = &( *(getUser(username)) );
         fillListBox(selectedUser);
 
         userPanel->Hide();
         listsPanel->Show();
         Layout();
+        listInputField->SetFocus();
     }
     evt.Skip();
 }
@@ -251,7 +274,7 @@ void MainFrame::onAddListButtonClicked(wxCommandEvent &evt) {
     addListFromInput();
 }
 
-void MainFrame::onInputEnter(wxCommandEvent &evt) {
+void MainFrame::onListInputEnter(wxCommandEvent &evt) {
     addListFromInput();
 }
 
@@ -263,7 +286,7 @@ void MainFrame::addListFromInput() {
 
         //creating shopping list and adding it to the corresponding user
         std::shared_ptr<ShoppingList> myShoppingList(new ShoppingList(listName.ToStdString()));
-        auto it = findUser(username);
+        auto it = getUser(username);
         (*it).addShoppingList(myShoppingList);
 
         //adding the listName to the listBox
@@ -277,28 +300,109 @@ void MainFrame::onListKeyDown(wxKeyEvent &evt) {
     int index = listBox->GetSelection();
     switch ( evt.GetKeyCode() ) {
         case WXK_MACOS_DELETE:
-            listBox->Delete(index);
+            if(index != wxNOT_FOUND) {
+                std::string listName = listBox->GetString(index).ToStdString();
+                (*selectedUser).removeShoppingList(listName);
+
+                listBox->Delete(index);
+            }
+            break;
     }
 }
 
 void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
-    listsPanel->Hide();
-    editPanel->Show();
-    Layout();
+    int index = listBox->GetSelection();
+    if(index != wxNOT_FOUND) {
+        std::string listName = listBox->GetString(index).ToStdString();
+        fillItemListBox(listName);
+        listsPanel->Hide();
+        itemsPanel->Show();
+        Layout();
+    }
     //wxLogMessage("Double clicked");
 }
 
 void MainFrame::onBackListsButtonClicked(wxCommandEvent &evt) {
     listBox->Clear();
+    listInputField->Clear();
     listsPanel->Hide();
     userPanel->Show();
     Layout();
 }
 
 void MainFrame::fillListBox(User *user) {
-    std::list<std::shared_ptr<ShoppingList>> shoppinglists = user->getShoppingList();
+    std::list<std::shared_ptr<ShoppingList>> shoppinglists = user->getShoppingLists();
     for(auto const& shoppinglist : shoppinglists) {
         listBox->Append(shoppinglist->getName());
+    }
+}
+
+void MainFrame::onAddItemButtonClicked(wxCommandEvent &evt) {
+    addItemFromInput();
+}
+
+void MainFrame::onItemInputEnter(wxCommandEvent &evt) {
+    addItemFromInput();
+}
+
+void MainFrame::addItemFromInput() { //FIXME app crashes when trying to add the same item again (exception is thrown in ShoppingList::addItem)
+    if(!itemInputField->IsEmpty()) {
+         //create the item
+         wxString itemName = itemInputField->GetValue();
+         int quantity = spinCtrl->GetValue();
+         Item myItem(itemName.ToStdString(), "", quantity);
+
+         //add the item to the corresponding shopping list
+         std::string shoppingListName = listBox->GetString(listBox->GetSelection()).ToStdString();
+        auto selectedListItr = (*selectedUser).findShoppingList(shoppingListName);
+        (*selectedListItr)->addItem(myItem);
+
+         //add the item details to the checkListBox
+         itemCheckListBox->Append(itemName);
+         wxString itemQuantity = wxString::Format("%d",quantity);
+         quantityListBox->Append(itemQuantity);
+
+         //reset controls
+         spinCtrl->SetValue(1);
+         itemInputField->Clear();
+         itemInputField->SetFocus();
+    }
+}
+
+void MainFrame::onBackItemsButtonClicked(wxCommandEvent &evt) {
+    itemCheckListBox->Clear();
+    quantityListBox->Clear();
+    itemInputField->Clear();
+    itemsPanel->Hide();
+    listsPanel->Show();
+    Layout();
+}
+
+void MainFrame::fillItemListBox(const std::string& listName) {
+    auto selectedList = (*selectedUser).findShoppingList(listName);
+    std::vector<Item> items = (*selectedList)->getItems();
+    for (const auto& item : items) {
+        wxString itemName = item.getName();
+        itemCheckListBox->Append(itemName);
+        wxString itemQuantity = wxString::Format("%d", item.getQuantity());
+        quantityListBox->Append(itemQuantity);
+    }
+}
+
+void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
+    int itemIndex = itemCheckListBox->GetSelection();
+    switch( evt.GetKeyCode() ) {
+        case WXK_MACOS_DELETE:
+            if(itemIndex != wxNOT_FOUND) {
+                std::string listName = listBox->GetString(listBox->GetSelection()).ToStdString();
+                auto selectedListItr = (*selectedUser).findShoppingList(listName);
+                std::string itemName = (itemCheckListBox->GetString(itemIndex).ToStdString());
+                (*selectedListItr)->removeItem(itemName);
+
+                itemCheckListBox->Delete(itemIndex);
+                quantityListBox->Delete(itemIndex);
+            }
+            break;
     }
 }
 

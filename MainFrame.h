@@ -6,6 +6,7 @@
 #define SHOPPINGLISTAPP_MAINFRAME_H
 
 #include <wx/wx.h>
+#include <wx/spinctrl.h>
 #include <vector>
 #include "User.h"
 #include "ShoppingList.h"
@@ -17,11 +18,11 @@ public:
 private:
     void setupUserMenu();
     void setupListsMenu();
-    void setupEditMenu();
+    void setupItemsMenu();
 
     void setupUserMenuSizers();
     void setupListsMenuSizers();
-    void setupEditMenuSizers();
+    void setupItemsMenuSizers();
 
     void bindEventHandlers();
 
@@ -29,18 +30,24 @@ private:
     void onUserInputEnter(wxCommandEvent& evt);
     void onUserListKeyDown(wxKeyEvent& evt);
     void onUserListDoubleClick(wxMouseEvent& evt);
-    void addUserFromInput();
-
 
     void onAddListButtonClicked(wxCommandEvent& evt);
     void onListKeyDown(wxKeyEvent& evt);
-    void onInputEnter(wxCommandEvent& evt);
+    void onListInputEnter(wxCommandEvent& evt);
     void onListDoubleClick(wxMouseEvent& evt);
     void onBackListsButtonClicked(wxCommandEvent& evt);
 
+    void onAddItemButtonClicked(wxCommandEvent& evt);
+    void onBackItemsButtonClicked(wxCommandEvent& evt);
+    void onItemInputEnter(wxCommandEvent& evt);
+    void onItemCheckListKeyDown(wxKeyEvent& evt);
+
+    void addUserFromInput();
     void addListFromInput();
+    void addItemFromInput();
     void fillListBox(User* user);
-    std::vector<User>::iterator findUser(const std::string& username);
+    void fillItemListBox(const std::string& listName);
+    std::vector<User>::iterator getUser(const std::string& username);
 
     User* selectedUser;
 
@@ -64,13 +71,15 @@ private:
     wxListBox* listBox;
 
     // Edit Menu //
-    wxPanel* editPanel;
-    wxStaticText* headlineEditMenuText;
+    wxPanel* itemsPanel;
+    wxStaticText* headlineItemsMenuText;
     wxStaticText* newItemText;
     wxTextCtrl* itemInputField;
+    wxSpinCtrl* spinCtrl;
     wxButton* addItemButton;
     wxButton* backItemsButton;
     wxCheckListBox* itemCheckListBox;
+    wxListBox* quantityListBox;
 };
 
 

@@ -27,6 +27,7 @@ public:
 
     std::string getName() const {return name;}
     Item getItem(std::string name) const;
+    std::vector<Item> getItems() const{return items;}
 
 private:
     std::string name;

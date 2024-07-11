@@ -20,9 +20,10 @@ public:
 
     void removeShoppingList(const std::string& name);
 
-    std::string getUsername() const {return username;}
+    std::list<std::shared_ptr<ShoppingList>>::iterator findShoppingList(const std::string& listName);
 
-    std::list<std::shared_ptr<ShoppingList>> getShoppingList() const {return shoppinglists;}
+    std::string getUsername() const {return username;}
+    std::list<std::shared_ptr<ShoppingList>> getShoppingLists() const {return shoppinglists;}
 
 private:
     std::string username;

@@ -21,3 +21,13 @@ void User::removeShoppingList(const std::string& name) {
     else
         throw std::invalid_argument("Shopping list not found. Try again.");
 }
+
+std::list<std::shared_ptr<ShoppingList>>::iterator User::findShoppingList(const std::string &listName) {
+    auto it = shoppinglists.begin();
+    while (it != shoppinglists.end()) {
+        if (listName == (*it)->getName())
+            break;
+        it++;
+    }
+    return it;
+}

@@ -12,16 +12,14 @@ void ShoppingList::addItem(const Item &item) {
 }
 
 void ShoppingList::removeItem(const std::string& name) {
-    bool found = false;
     auto it = items.begin();
     while(it != items.end()) {
         if( (*it).getName() == name ) {
-            found = true;
             break;
         }
         it++;
     }
-    if(found) {
+    if(it != items.end()) {
         items.erase(it);
         notify();
     }else
