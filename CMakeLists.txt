@@ -20,6 +20,8 @@ add_executable(ShoppingListApp main.cpp
         MainFrame.cpp
         App.h
         App.cpp
-        User.cpp)
+        User.cpp
+        ShoppingListNotifier.h
+        ShoppingListNotifier.cpp)
 
 target_link_libraries(ShoppingListApp ${wxWidgets_LIBRARIES})

@@ -46,7 +46,7 @@ private:
     void addListFromInput();
     void addItemFromInput();
     void fillListBox(User* user);
-    void fillItemListBox(const std::string& listName);
+    void fillItemListBox(User* user);
     std::vector<User>::iterator getUser(const std::string& username);
 
     User* selectedUser;

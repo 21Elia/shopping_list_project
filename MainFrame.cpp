@@ -151,8 +151,10 @@ void MainFrame::setupItemsMenu() {
     addItemButton = new wxButton(itemsPanel, wxID_ANY, "Add");
     addItemButton->SetFont(buttonFont);
 
-    itemCheckListBox = new wxCheckListBox(itemsPanel, wxID_ANY);
-    quantityListBox = new wxListBox(itemsPanel, wxID_ANY, wxDefaultPosition, wxSize(40,-1));
+    itemCheckListBox = new wxCheckListBox(itemsPanel, wxID_ANY,
+                                          wxDefaultPosition, wxSize(-1, 400));
+    quantityListBox = new wxListBox(itemsPanel, wxID_ANY,
+                                    wxDefaultPosition, wxSize(40,400));
 
     setupItemsMenuSizers();
     //itemsPanel->Hide();
@@ -191,13 +193,13 @@ void MainFrame::setupItemsMenuSizers() {
 }
 
 void MainFrame::bindEventHandlers() {
-
     // user menu controls binds
     addUserButton->Bind(wxEVT_BUTTON, &MainFrame::onAddUserButtonClicked, this);
     userInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onUserInputEnter, this);
     userListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onUserListKeyDown, this);
     userListBox->Bind(wxEVT_LEFT_DCLICK, &MainFrame::onUserListDoubleClick, this);
 
+    //shopping lists menu control binds
     addListButton->Bind(wxEVT_BUTTON, &MainFrame::onAddListButtonClicked, this);
     listInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onListInputEnter, this);
     listBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onListKeyDown, this);
@@ -287,7 +289,14 @@ void MainFrame::addListFromInput() {
         //creating shopping list and adding it to the corresponding user
         std::shared_ptr<ShoppingList> myShoppingList(new ShoppingList(listName.ToStdString()));
         auto it = getUser(username);
-        (*it).addShoppingList(myShoppingList);
+        try {
+            (*it).addShoppingList(myShoppingList);
+        }
+        catch(std::invalid_argument& e) {
+            wxLogError(e.what());
+            listInputField->Clear();
+            return;
+        }
 
         //adding the listName to the listBox
         listBox->Insert(listName, listBox->GetCount()); //second parameter is the listBox index
@@ -314,12 +323,11 @@ void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
     int index = listBox->GetSelection();
     if(index != wxNOT_FOUND) {
         std::string listName = listBox->GetString(index).ToStdString();
-        fillItemListBox(listName);
+        fillItemListBox(selectedUser);
         listsPanel->Hide();
         itemsPanel->Show();
         Layout();
     }
-    //wxLogMessage("Double clicked");
 }
 
 void MainFrame::onBackListsButtonClicked(wxCommandEvent &evt) {
@@ -345,7 +353,7 @@ void MainFrame::onItemInputEnter(wxCommandEvent &evt) {
     addItemFromInput();
 }
 
-void MainFrame::addItemFromInput() { //FIXME app crashes when trying to add the same item again (exception is thrown in ShoppingList::addItem)
+void MainFrame::addItemFromInput() {
     if(!itemInputField->IsEmpty()) {
          //create the item
          wxString itemName = itemInputField->GetValue();
@@ -357,10 +365,16 @@ void MainFrame::addItemFromInput() { //FIXME app crashes when trying to add the 
         auto selectedListItr = (*selectedUser).findShoppingList(shoppingListName);
         (*selectedListItr)->addItem(myItem);
 
-         //add the item details to the checkListBox
-         itemCheckListBox->Append(itemName);
+         // update the itemListBox
+         itemCheckListBox->Clear();
+         quantityListBox->Clear();
+         fillItemListBox(selectedUser);
+
+        //add the item details to the checkListBox
+         /*itemCheckListBox->Append(itemName);
          wxString itemQuantity = wxString::Format("%d",quantity);
          quantityListBox->Append(itemQuantity);
+          */
 
          //reset controls
          spinCtrl->SetValue(1);
@@ -378,7 +392,8 @@ void MainFrame::onBackItemsButtonClicked(wxCommandEvent &evt) {
     Layout();
 }
 
-void MainFrame::fillItemListBox(const std::string& listName) {
+void MainFrame::fillItemListBox(User* user) {
+    std::string listName = listBox->GetString(listBox->GetSelection()).ToStdString();
     auto selectedList = (*selectedUser).findShoppingList(listName);
     std::vector<Item> items = (*selectedList)->getItems();
     for (const auto& item : items) {

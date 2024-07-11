@@ -5,7 +5,10 @@
 #include "User.h"
 
 void User::addShoppingList(const std::shared_ptr<ShoppingList>& list) {
-    shoppinglists.push_back(list);
+    if( !isInShoppingLists(list->getName()) )
+        shoppinglists.push_back(list);
+    else
+        throw std::invalid_argument(list->getName() + " already exists. Use a different name.");
 }
 
 void User::removeShoppingList(const std::string& name) {
@@ -29,5 +32,19 @@ std::list<std::shared_ptr<ShoppingList>>::iterator User::findShoppingList(const 
             break;
         it++;
     }
-    return it;
+    if (it != shoppinglists.end())
+        return it;
+    else
+        throw std::invalid_argument("List not found");
+}
+
+bool User::isInShoppingLists(const std::string &name) {
+    bool found = false;
+    auto it = shoppinglists.begin();
+    while (it != shoppinglists.end() && !found) {
+        if ( name == (*it)->getName() )
+            found = true;
+        it++;
+    }
+    return found;
 }

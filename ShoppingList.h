@@ -18,6 +18,7 @@ public:
     void removeItem(const std::string& name);
     void printDetails();
     int getNumItems() const;
+    std::vector<Item>::iterator getItemItr(std::string name);
 
     bool isInList(const Item& givenItem);
 
@@ -26,7 +27,6 @@ public:
     void unsubscribe(Observer* o) override;
 
     std::string getName() const {return name;}
-    Item getItem(std::string name) const;
     std::vector<Item> getItems() const{return items;}
 
 private:

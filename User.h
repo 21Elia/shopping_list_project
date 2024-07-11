@@ -11,6 +11,7 @@
 #include <list>
 #include <memory>
 #include <utility>
+#include <algorithm>
 
 class User {
 public:
@@ -19,6 +20,8 @@ public:
     void addShoppingList(const std::shared_ptr<ShoppingList>& list);
 
     void removeShoppingList(const std::string& name);
+
+    bool isInShoppingLists(const std::string& name);
 
     std::list<std::shared_ptr<ShoppingList>>::iterator findShoppingList(const std::string& listName);
 
