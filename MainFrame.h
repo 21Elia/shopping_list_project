@@ -13,7 +13,7 @@
 
 class MainFrame : public wxFrame {
 public:
-    MainFrame(const wxString &title);
+    explicit MainFrame(const wxString &title);
 
 private:
     void setupUserMenu();
@@ -23,6 +23,7 @@ private:
     void setupUserMenuSizers();
     void setupListsMenuSizers();
     void setupItemsMenuSizers();
+    void setupFrameSizers();
 
     void bindEventHandlers();
 
@@ -39,6 +40,7 @@ private:
 
     void onAddItemButtonClicked(wxCommandEvent& evt);
     void onBackItemsButtonClicked(wxCommandEvent& evt);
+    void onShareListButtonClicked(wxCommandEvent& evt);
     void onItemInputEnter(wxCommandEvent& evt);
     void onItemCheckListKeyDown(wxKeyEvent& evt);
 
@@ -53,31 +55,32 @@ private:
 
     // User Menu //
     wxPanel* userPanel;
-    wxStaticText* newUserText;
+    wxStaticText* newUserLabel;
     wxTextCtrl* userInputField;
     wxButton* addUserButton;
-    wxStaticText* selectUserText;
+    wxStaticText* selectUserLabel;
     wxListBox* userListBox;
     std::vector<User> users;
 
 
     // Lists Menu //
     wxPanel* listsPanel;
-    wxStaticText* headlineText;
-    wxStaticText* newListText;
+    wxStaticText* headlineLabel;
+    wxStaticText* newListLabel;
     wxTextCtrl* listInputField;
     wxButton* addListButton;
     wxButton* backListsButton;
     wxListBox* listBox;
 
-    // Edit Menu //
+    // Items Menu //
     wxPanel* itemsPanel;
-    wxStaticText* headlineItemsMenuText;
-    wxStaticText* newItemText;
+    wxStaticText* headlineItemsLabel;
+    wxStaticText* newItemLabel;
     wxTextCtrl* itemInputField;
     wxSpinCtrl* spinCtrl;
     wxButton* addItemButton;
     wxButton* backItemsButton;
+    wxButton* shareListButton;
     wxCheckListBox* itemCheckListBox;
     wxListBox* quantityListBox;
 };

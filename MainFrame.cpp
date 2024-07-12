@@ -19,8 +19,15 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
     setupItemsMenu();
     bindEventHandlers();
 
-    // setting up the frame sizer
+    setupFrameSizers();
 
+    // start with showing user menu
+
+    listsPanel->Hide();
+    itemsPanel->Hide();
+}
+
+void MainFrame::setupFrameSizers() {
     wxBoxSizer* frameSizer = new wxBoxSizer(wxVERTICAL);
     frameSizer->Add(userPanel, wxSizerFlags().Proportion(1).Expand());
     frameSizer->Add(listsPanel, wxSizerFlags().Proportion(1).Expand());
@@ -28,26 +35,23 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
 
     wxGridSizer* outerSizer = new wxGridSizer(1);
     outerSizer->Add(frameSizer,wxSizerFlags().Border(wxALL, 75).Expand());
-    SetSizerAndFit(outerSizer);
-
-
-    listsPanel->Hide();
-    itemsPanel->Hide();
+    this->SetSizer(outerSizer);
+    outerSizer->SetSizeHints(this);
 }
 
 void MainFrame::setupUserMenu() {
     userPanel = new wxPanel(this);
 
-    newUserText = new wxStaticText(userPanel, wxID_ANY, "Add a new user");
-    newUserText->SetFont(wxFontInfo(wxSize(0,24)).Bold());
+    newUserLabel = new wxStaticText(userPanel, wxID_ANY, "Add a new user");
+    newUserLabel->SetFont(wxFontInfo(wxSize(0, 24)).Bold());
 
     userInputField = new wxTextCtrl(userPanel, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     userInputField->SetFont(wxFontInfo(wxSize(0,18)));
     addUserButton = new wxButton(userPanel, wxID_ANY, "Add");
 
-    selectUserText = new wxStaticText(userPanel, wxID_ANY,"Select a user");
-    selectUserText->SetFont(wxFontInfo(wxSize(0,24)).Bold());
+    selectUserLabel = new wxStaticText(userPanel, wxID_ANY, "Select a user");
+    selectUserLabel->SetFont(wxFontInfo(wxSize(0, 24)).Bold());
 
     userListBox = new wxListBox(userPanel, wxID_ANY);
 
@@ -57,21 +61,30 @@ void MainFrame::setupUserMenu() {
 void MainFrame::setupUserMenuSizers() {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-    mainSizer->Add(newUserText, wxSizerFlags().CenterHorizontal());
+    mainSizer->Add(newUserLabel, wxSizerFlags().CenterHorizontal());
+
     mainSizer->AddSpacer(25);
 
-    wxBoxSizer* inputSizer = new wxBoxSizer(wxHORIZONTAL);
-    inputSizer->Add(userInputField, wxSizerFlags().Proportion(1));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(addUserButton, wxSizerFlags().Proportion(0));
+    wxBoxSizer* inputFieldSizer = new wxBoxSizer(wxHORIZONTAL);
+    inputFieldSizer->Add(userInputField, wxSizerFlags().Proportion(1));
+    inputFieldSizer->AddSpacer(10);
+    inputFieldSizer->Add(addUserButton,
+                         wxSizerFlags().Proportion(0).Expand());
 
-    mainSizer->Add(inputSizer, wxSizerFlags().Expand());
-    mainSizer->AddSpacer(25);
-    mainSizer->Add(selectUserText, wxSizerFlags().CenterHorizontal());
-    mainSizer->AddSpacer(25);
-    mainSizer->Add(userListBox, wxSizerFlags().Expand().Proportion(1));
+    mainSizer->Add(inputFieldSizer, wxSizerFlags().Expand());
 
-    userPanel->SetSizer(mainSizer);
+    mainSizer->AddSpacer(25);
+
+    mainSizer->Add(selectUserLabel, wxSizerFlags().CenterHorizontal());
+
+    mainSizer->AddSpacer(25);
+
+    mainSizer->Add(userListBox, wxSizerFlags().Proportion(1).Expand());
+
+    wxGridSizer* outerSizer = new wxGridSizer(1);
+    outerSizer->Add(mainSizer, wxSizerFlags().Expand());
+
+    userPanel->SetSizer(outerSizer);
 }
 
 void MainFrame::setupListsMenu() {
@@ -81,14 +94,14 @@ void MainFrame::setupListsMenu() {
 
     listsPanel = new wxPanel(this);
 
-    backListsButton = new wxButton(listsPanel, wxID_ANY, "Back");
+    backListsButton = new wxButton(listsPanel, wxID_ANY, "Back", wxDefaultPosition, wxDefaultSize);
     backListsButton->SetFont(buttonFont);
 
-    headlineText = new wxStaticText(listsPanel, wxID_ANY, "Shopping Lists");
-    headlineText->SetFont(headlineFont);
+    headlineLabel = new wxStaticText(listsPanel, wxID_ANY, "Shopping Lists");
+    headlineLabel->SetFont(headlineFont);
 
-    newListText = new wxStaticText(listsPanel, wxID_ANY, "New List");
-    newListText->SetFont(wxFontInfo(wxSize(0, 20)).Bold());
+    newListLabel = new wxStaticText(listsPanel, wxID_ANY, "New List");
+    newListLabel->SetFont(wxFontInfo(wxSize(0, 20)).Bold());
 
     listInputField = new wxTextCtrl(listsPanel, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
@@ -106,28 +119,41 @@ void MainFrame::setupListsMenu() {
 void MainFrame::setupListsMenuSizers() {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
+    mainSizer->Add(backListsButton, wxSizerFlags().Align(wxLEFT | wxTOP));
+
+    mainSizer->Add(headlineLabel, wxSizerFlags().CenterHorizontal());
+
     mainSizer->AddSpacer(25);
-    mainSizer->Add(headlineText, wxSizerFlags().CenterHorizontal());
+
+    wxBoxSizer* inputFieldSizer = new wxBoxSizer(wxHORIZONTAL);
+    inputFieldSizer->Add(newListLabel,
+                         wxSizerFlags().Proportion(0).Expand().Border(wxTOP, 5));
+
+    inputFieldSizer->AddSpacer(10);
+
+    inputFieldSizer->Add(listInputField, wxSizerFlags().Proportion(1));
+
+    inputFieldSizer->AddSpacer(10);
+
+    inputFieldSizer->Add(addListButton,
+                         wxSizerFlags().Proportion(0).Expand());
+
+    mainSizer->Add(inputFieldSizer, wxSizerFlags().Expand());
+
     mainSizer->AddSpacer(25);
 
+    mainSizer->Add(listBox, wxSizerFlags().Proportion(1).Expand());
 
-    wxBoxSizer* inputSizer = new wxBoxSizer(wxHORIZONTAL);
-    inputSizer->Add(newListText, wxSizerFlags().Proportion(0));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(listInputField, wxSizerFlags().Proportion(1));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(addListButton, wxSizerFlags().Proportion(0));
+    wxGridSizer* outerSizer = new wxGridSizer(1);
+    outerSizer->Add(mainSizer, wxSizerFlags().Expand());
 
-    mainSizer->Add(inputSizer, wxSizerFlags().Expand());
-    mainSizer->AddSpacer(10);
-    mainSizer->Add(listBox, wxSizerFlags().Expand().Proportion(1));
+    listsPanel->SetSizer(outerSizer);
 
-    listsPanel->SetSizer(mainSizer);
 }
 
 void MainFrame::setupItemsMenu() {
     wxFont headlineFont(wxFontInfo(wxSize(0,36)).Bold());
-    wxFont inputFont(wxFontInfo(wxSize(0,20)));
+    wxFont inputFont(wxFontInfo(wxSize(0,18)));
     wxFont buttonFont(wxFontInfo(wxSize(0,14)));
 
     itemsPanel = new wxPanel(this);
@@ -135,11 +161,14 @@ void MainFrame::setupItemsMenu() {
     backItemsButton = new wxButton(itemsPanel, wxID_ANY, "Back");
     backItemsButton->SetFont(buttonFont);
 
-    headlineItemsMenuText = new wxStaticText(itemsPanel, wxID_ANY, "Add or Delete Items");
-    headlineItemsMenuText->SetFont(headlineFont);
+    shareListButton = new wxButton(itemsPanel, wxID_ANY, "Share List");
+    shareListButton->SetFont(buttonFont);
 
-    newItemText = new wxStaticText(itemsPanel, wxID_ANY, "New Item");
-    newItemText->SetFont(wxFontInfo(wxSize(0,20)).Bold());
+    headlineItemsLabel = new wxStaticText(itemsPanel, wxID_ANY, "Add or Delete Items");
+    headlineItemsLabel->SetFont(headlineFont);
+
+    newItemLabel = new wxStaticText(itemsPanel, wxID_ANY, "New Item");
+    newItemLabel->SetFont(wxFontInfo(wxSize(0, 20)).Bold());
 
     itemInputField = new wxTextCtrl(itemsPanel, wxID_ANY, "",
                                     wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
@@ -147,6 +176,7 @@ void MainFrame::setupItemsMenu() {
 
     spinCtrl = new wxSpinCtrl(itemsPanel, wxID_ANY, "",wxDefaultPosition,wxDefaultSize,
                               wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 1, 100, 1);
+    spinCtrl->SetFont(inputFont);
 
     addItemButton = new wxButton(itemsPanel, wxID_ANY, "Add");
     addItemButton->SetFont(buttonFont);
@@ -157,39 +187,64 @@ void MainFrame::setupItemsMenu() {
                                     wxDefaultPosition, wxSize(40,400));
 
     setupItemsMenuSizers();
-    //itemsPanel->Hide();
-
 }
 
 void MainFrame::setupItemsMenuSizers() {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-    mainSizer->AddSpacer(25);
-    mainSizer->Add(headlineItemsMenuText, wxSizerFlags().CenterHorizontal());
+    wxBoxSizer* topSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    topSizer->Add(backItemsButton, wxSizerFlags().Align(wxLEFT));
+
+    topSizer->AddSpacer(685);
+
+    topSizer->Add(shareListButton, wxSizerFlags().Align(wxRIGHT));
+
+    mainSizer->Add(topSizer, wxSizerFlags().Align(wxTOP).Expand());
+
     mainSizer->AddSpacer(25);
 
-    wxBoxSizer* inputSizer = new wxBoxSizer(wxHORIZONTAL);
-    inputSizer->Add(newItemText, wxSizerFlags().Proportion(0));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(itemInputField, wxSizerFlags().Proportion(1));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(spinCtrl, wxSizerFlags().Proportion(0));
-    inputSizer->AddSpacer(10);
-    inputSizer->Add(addItemButton, wxSizerFlags().Proportion(0));
+    mainSizer->Add(headlineItemsLabel, wxSizerFlags().CenterHorizontal());
 
-    mainSizer->Add(inputSizer, wxSizerFlags().Expand());
-    mainSizer->AddSpacer(10);
+    mainSizer->AddSpacer(25);
+
+    wxBoxSizer* inputFieldSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    inputFieldSizer->Add(newItemLabel,
+                         wxSizerFlags().Proportion(0).Expand().Border(wxTOP, 5));
+
+    inputFieldSizer->AddSpacer(10);
+
+    inputFieldSizer->Add(itemInputField, wxSizerFlags().Proportion(1));
+
+    inputFieldSizer->AddSpacer(10);
+
+    inputFieldSizer->Add(spinCtrl,
+                         wxSizerFlags().Proportion(0).Expand());
+
+    inputFieldSizer->AddSpacer(10);
+
+    inputFieldSizer->Add(addItemButton,
+                         wxSizerFlags().Proportion(0).Expand());
+
+    mainSizer->Add(inputFieldSizer, wxSizerFlags().Expand());
+
+    mainSizer->AddSpacer(25);
 
     wxBoxSizer* listSizer = new wxBoxSizer(wxHORIZONTAL);
-    listSizer->AddSpacer(97);
-    listSizer->Add(itemCheckListBox, wxSizerFlags().Proportion(1));
-    listSizer->AddSpacer(5);
-    listSizer->Add(quantityListBox, wxSizerFlags().Proportion(0));
-    listSizer->AddSpacer(110);
-    mainSizer->Add(listSizer, wxSizerFlags().Expand());
-    //mainSizer->Add(itemCheckListBox, wxSizerFlags().Expand().Proportion(1));
 
-    itemsPanel->SetSizer(mainSizer);
+    listSizer->Add(itemCheckListBox, wxSizerFlags().Proportion(1));
+
+    listSizer->AddSpacer(10);
+
+    listSizer->Add(quantityListBox, wxSizerFlags().Proportion(0));
+
+    mainSizer->Add(listSizer, wxSizerFlags().Expand());
+
+    wxGridSizer* outerSizer = new wxGridSizer(1);
+    outerSizer->Add(mainSizer, wxSizerFlags().Expand());
+
+    itemsPanel->SetSizer(outerSizer);
 }
 
 void MainFrame::bindEventHandlers() {
@@ -209,6 +264,7 @@ void MainFrame::bindEventHandlers() {
     // items menu control binds
     backItemsButton->Bind(wxEVT_BUTTON, &MainFrame::onBackItemsButtonClicked, this);
     addItemButton->Bind(wxEVT_BUTTON, &MainFrame::onAddItemButtonClicked, this);
+    shareListButton->Bind(wxEVT_BUTTON, &MainFrame::onShareListButtonClicked, this);
     itemInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
     spinCtrl->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
     itemCheckListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onItemCheckListKeyDown, this);
@@ -254,7 +310,10 @@ std::vector<User>::iterator MainFrame::getUser(const std::string &username) {
             break;
         it++;
     }
-    return it;
+    if(it != users.end())
+        return it;
+    else
+        throw std::runtime_error("User not found.");
 }
 
 void MainFrame::onUserListDoubleClick(wxMouseEvent &evt) {
@@ -328,6 +387,7 @@ void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
         itemsPanel->Show();
         Layout();
     }
+    evt.Skip();
 }
 
 void MainFrame::onBackListsButtonClicked(wxCommandEvent &evt) {
@@ -419,6 +479,36 @@ void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
             }
             break;
     }
+}
+
+void MainFrame::onShareListButtonClicked(wxCommandEvent &evt) {
+    wxTextEntryDialog dialog(this,
+                      wxT("Enter a user you want to share the list with."), wxT("Share"));
+    if (dialog.ShowModal() == wxID_OK) {
+        std::string username = dialog.GetValue().ToStdString();
+        try {
+            auto userItr = getUser(username);
+            int listIndex = listBox->GetSelection();
+
+            wxString listName = listBox->GetString(listIndex);
+            auto listItr = (*selectedUser).findShoppingList(listName.ToStdString());
+
+            // adding the list
+
+            (*userItr).addShoppingList(*listItr);
+            listBox->Append(listName);  //this adds the listName to listboxes of all users
+            // i have to clear and then fill again the selected user's list box
+            listBox->Clear();
+            fillListBox(selectedUser);
+
+            wxLogMessage(listName + " shared with " + username);
+        }
+        catch(std::runtime_error& e) {
+            wxLogError( e.what());
+            return;
+        }
+    }
+
 }
 
 
