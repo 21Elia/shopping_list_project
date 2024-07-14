@@ -6,8 +6,10 @@
 
 void ShoppingList::addItem(const Item &item) {
     if(isInList(item)) {
-        auto it = getItemItr(item.getName());
-        it->setQuantity(it->getQuantity() + item.getQuantity());
+        Item& existingItem = getItem(item.getName());
+        if(existingItem.isChecked())
+            existingItem.setCheck(false);
+        existingItem.setQuantity(existingItem.getQuantity() + item.getQuantity());
     }
     else
         items.push_back(item);
@@ -66,7 +68,7 @@ int ShoppingList::getNumItems() const {
     return total;
 }
 
-std::vector<Item>::iterator ShoppingList::getItemItr(std::string name) {
+Item& ShoppingList::getItem(std::string name) {
     auto it = items.begin();
     while(it != items.end()) {
         if(name == (*it).getName()) {
@@ -75,7 +77,7 @@ std::vector<Item>::iterator ShoppingList::getItemItr(std::string name) {
         it++;
     }
     if(it != items.end())
-        return it;
+        return (*it);
     else
         throw std::invalid_argument("Item not found. Try again.");
 }

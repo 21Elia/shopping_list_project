@@ -18,7 +18,7 @@ public:
     void removeItem(const std::string& name);
     void printDetails();
     int getNumItems() const;
-    std::vector<Item>::iterator getItemItr(std::string name);
+    Item& getItem(std::string name);
 
     bool isInList(const Item& givenItem);
 

@@ -43,15 +43,18 @@ private:
     void onShareListButtonClicked(wxCommandEvent& evt);
     void onItemInputEnter(wxCommandEvent& evt);
     void onItemCheckListKeyDown(wxKeyEvent& evt);
+    void onItemChecked(wxCommandEvent& evt);
 
     void addUserFromInput();
     void addListFromInput();
     void addItemFromInput();
-    void fillListBox(User* user);
-    void fillItemListBox(User* user);
-    std::vector<User>::iterator getUser(const std::string& username);
+    void updateLists(User* user);
+    void updateItems(const std::shared_ptr<ShoppingList> &shoppingList);
+    void setItemCheckStatus();
+    std::vector<User>::iterator findUser(const std::string& username);
 
-    User* selectedUser;
+    User* currentUser;
+    std::shared_ptr<ShoppingList> currentList;
 
     // User Menu //
     wxPanel* userPanel;

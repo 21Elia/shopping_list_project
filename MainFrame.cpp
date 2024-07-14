@@ -60,11 +60,8 @@ void MainFrame::setupUserMenu() {
 
 void MainFrame::setupUserMenuSizers() {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-
     mainSizer->Add(newUserLabel, wxSizerFlags().CenterHorizontal());
-
     mainSizer->AddSpacer(25);
-
     wxBoxSizer* inputFieldSizer = new wxBoxSizer(wxHORIZONTAL);
     inputFieldSizer->Add(userInputField, wxSizerFlags().Proportion(1));
     inputFieldSizer->AddSpacer(10);
@@ -72,13 +69,9 @@ void MainFrame::setupUserMenuSizers() {
                          wxSizerFlags().Proportion(0).Expand());
 
     mainSizer->Add(inputFieldSizer, wxSizerFlags().Expand());
-
     mainSizer->AddSpacer(25);
-
     mainSizer->Add(selectUserLabel, wxSizerFlags().CenterHorizontal());
-
     mainSizer->AddSpacer(25);
-
     mainSizer->Add(userListBox, wxSizerFlags().Proportion(1).Expand());
 
     wxGridSizer* outerSizer = new wxGridSizer(1);
@@ -268,6 +261,7 @@ void MainFrame::bindEventHandlers() {
     itemInputField->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
     spinCtrl->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
     itemCheckListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onItemCheckListKeyDown, this);
+    itemCheckListBox->Bind(wxEVT_CHECKLISTBOX, &MainFrame::onItemChecked, this);
 }
 
 void MainFrame::onAddUserButtonClicked(wxCommandEvent &evt) {
@@ -279,13 +273,15 @@ void MainFrame::onUserInputEnter(wxCommandEvent &evt) {
 }
 
 void MainFrame::addUserFromInput() {
-    if(!userInputField->IsEmpty()) {
-        std::string username = userInputField->GetValue().ToStdString();
-        User myUser(username);
-        users.push_back(myUser);
-        userListBox->Insert(myUser.getUsername(), userListBox->GetCount());
-        userInputField->Clear();
+    wxString username = userInputField->GetValue();
+    if (username.IsEmpty()) {
+        wxMessageBox("User name cannot be empty!", "Error", wxICON_ERROR);
+        return;
     }
+    User user(username.ToStdString());
+    users.push_back(user);
+    userListBox->Insert(user.getUsername(), userListBox->GetCount());
+    userInputField->Clear();
     userInputField->SetFocus();
 }
 
@@ -295,7 +291,7 @@ void MainFrame::onUserListKeyDown(wxKeyEvent &evt) {
         case WXK_MACOS_DELETE:
             if (index != wxNOT_FOUND) {
                 std::string username = userListBox->GetString(index).ToStdString();
-                auto it = getUser(username);
+                auto it = findUser(username);
                 users.erase(it);
                 userListBox->Delete(index);
             }
@@ -303,7 +299,7 @@ void MainFrame::onUserListKeyDown(wxKeyEvent &evt) {
     }
 }
 
-std::vector<User>::iterator MainFrame::getUser(const std::string &username) {
+std::vector<User>::iterator MainFrame::findUser(const std::string &username) {
     auto it = users.begin();
     while(it != users.end()) {
         if((*it).getUsername() == username)
@@ -320,8 +316,8 @@ void MainFrame::onUserListDoubleClick(wxMouseEvent &evt) {
     int index = userListBox->GetSelection();
     if(index != wxNOT_FOUND) {
         std::string username = userListBox->GetString(index).ToStdString();
-        selectedUser = &( *(getUser(username)) );
-        fillListBox(selectedUser);
+        currentUser = &( *(findUser(username)) );
+        updateLists(currentUser);
 
         userPanel->Hide();
         listsPanel->Show();
@@ -341,26 +337,26 @@ void MainFrame::onListInputEnter(wxCommandEvent &evt) {
 
 void MainFrame::addListFromInput() {
     wxString listName = listInputField->GetValue();
-    int index = userListBox->GetSelection();
-    if(!listName.IsEmpty()){
-        std::string username = userListBox->GetString(index).ToStdString();
-
-        //creating shopping list and adding it to the corresponding user
-        std::shared_ptr<ShoppingList> myShoppingList(new ShoppingList(listName.ToStdString()));
-        auto it = getUser(username);
-        try {
-            (*it).addShoppingList(myShoppingList);
-        }
-        catch(std::invalid_argument& e) {
-            wxLogError(e.what());
-            listInputField->Clear();
-            return;
-        }
-
-        //adding the listName to the listBox
-        listBox->Insert(listName, listBox->GetCount()); //second parameter is the listBox index
-        listInputField->Clear();
+    if (listName.IsEmpty()) {
+        wxMessageBox("List name cannot be empty!", "Error", wxICON_ERROR);
+        return;
     }
+
+    //creating shopping list and adding it to the corresponding user
+    std::shared_ptr<ShoppingList> myShoppingList(new ShoppingList(listName.ToStdString()));
+
+    try {
+        (*currentUser).addShoppingList(myShoppingList);
+    }
+    catch(std::invalid_argument& e) {
+        wxLogError(e.what());
+        listInputField->Clear();
+        return;
+    }
+
+    //adding the listName to the listBox
+    listBox->Insert(listName, listBox->GetCount()); //second parameter is the listBox index
+    listInputField->Clear();
     listInputField->SetFocus();
 }
 
@@ -370,7 +366,7 @@ void MainFrame::onListKeyDown(wxKeyEvent &evt) {
         case WXK_MACOS_DELETE:
             if(index != wxNOT_FOUND) {
                 std::string listName = listBox->GetString(index).ToStdString();
-                (*selectedUser).removeShoppingList(listName);
+                (*currentUser).removeShoppingList(listName);
 
                 listBox->Delete(index);
             }
@@ -382,7 +378,9 @@ void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
     int index = listBox->GetSelection();
     if(index != wxNOT_FOUND) {
         std::string listName = listBox->GetString(index).ToStdString();
-        fillItemListBox(selectedUser);
+        currentList = (* (*currentUser).findShoppingList(listName) );
+        updateItems(currentList);
+        itemInputField->Clear();
         listsPanel->Hide();
         itemsPanel->Show();
         Layout();
@@ -391,14 +389,13 @@ void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
 }
 
 void MainFrame::onBackListsButtonClicked(wxCommandEvent &evt) {
-    listBox->Clear();
-    listInputField->Clear();
     listsPanel->Hide();
     userPanel->Show();
     Layout();
 }
 
-void MainFrame::fillListBox(User *user) {
+void MainFrame::updateLists(User *user) {
+    listBox->Clear();
     std::list<std::shared_ptr<ShoppingList>> shoppinglists = user->getShoppingLists();
     for(auto const& shoppinglist : shoppinglists) {
         listBox->Append(shoppinglist->getName());
@@ -414,52 +411,44 @@ void MainFrame::onItemInputEnter(wxCommandEvent &evt) {
 }
 
 void MainFrame::addItemFromInput() {
-    if(!itemInputField->IsEmpty()) {
-         //create the item
-         wxString itemName = itemInputField->GetValue();
-         int quantity = spinCtrl->GetValue();
-         Item myItem(itemName.ToStdString(), "", quantity);
-
-         //add the item to the corresponding shopping list
-         std::string shoppingListName = listBox->GetString(listBox->GetSelection()).ToStdString();
-        auto selectedListItr = (*selectedUser).findShoppingList(shoppingListName);
-        (*selectedListItr)->addItem(myItem);
-
-         // update the itemListBox
-         itemCheckListBox->Clear();
-         quantityListBox->Clear();
-         fillItemListBox(selectedUser);
-
-        //add the item details to the checkListBox
-         /*itemCheckListBox->Append(itemName);
-         wxString itemQuantity = wxString::Format("%d",quantity);
-         quantityListBox->Append(itemQuantity);
-          */
-
-         //reset controls
-         spinCtrl->SetValue(1);
-         itemInputField->Clear();
-         itemInputField->SetFocus();
+    wxString itemName = itemInputField->GetValue();
+    if (itemName.IsEmpty()) {
+        wxMessageBox("Item name cannot be empty!", "Error", wxICON_ERROR);
+        return;
     }
+    //create the item
+    int quantity = spinCtrl->GetValue();
+    Item myItem(itemName.ToStdString(), "", quantity);
+    currentList->addItem(myItem);
+
+    // update the itemListBox
+    updateItems(currentList);
+
+    //reset controls
+    spinCtrl->SetValue(1);
+    itemInputField->Clear();
+    itemInputField->SetFocus();
 }
 
 void MainFrame::onBackItemsButtonClicked(wxCommandEvent &evt) {
-    itemCheckListBox->Clear();
-    quantityListBox->Clear();
-    itemInputField->Clear();
     itemsPanel->Hide();
     listsPanel->Show();
     Layout();
 }
 
-void MainFrame::fillItemListBox(User* user) {
-    std::string listName = listBox->GetString(listBox->GetSelection()).ToStdString();
-    auto selectedList = (*selectedUser).findShoppingList(listName);
-    std::vector<Item> items = (*selectedList)->getItems();
+void MainFrame::updateItems(const std::shared_ptr<ShoppingList> &shoppingList) {
+    itemCheckListBox->Clear();
+    quantityListBox->Clear();
+
+    std::vector<Item> items = (currentList)->getItems();
+
     for (const auto& item : items) {
         wxString itemName = item.getName();
-        itemCheckListBox->Append(itemName);
         wxString itemQuantity = wxString::Format("%d", item.getQuantity());
+        int index = itemCheckListBox->GetCount();
+
+        itemCheckListBox->Append(itemName);
+        itemCheckListBox->Check(index, item.isChecked());
         quantityListBox->Append(itemQuantity);
     }
 }
@@ -469,11 +458,8 @@ void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
     switch( evt.GetKeyCode() ) {
         case WXK_MACOS_DELETE:
             if(itemIndex != wxNOT_FOUND) {
-                std::string listName = listBox->GetString(listBox->GetSelection()).ToStdString();
-                auto selectedListItr = (*selectedUser).findShoppingList(listName);
                 std::string itemName = (itemCheckListBox->GetString(itemIndex).ToStdString());
-                (*selectedListItr)->removeItem(itemName);
-
+                currentList->removeItem(itemName);
                 itemCheckListBox->Delete(itemIndex);
                 quantityListBox->Delete(itemIndex);
             }
@@ -487,28 +473,40 @@ void MainFrame::onShareListButtonClicked(wxCommandEvent &evt) {
     if (dialog.ShowModal() == wxID_OK) {
         std::string username = dialog.GetValue().ToStdString();
         try {
-            auto userItr = getUser(username);
+            auto otherUserItr = findUser(username);
             int listIndex = listBox->GetSelection();
 
             wxString listName = listBox->GetString(listIndex);
-            auto listItr = (*selectedUser).findShoppingList(listName.ToStdString());
 
             // adding the list
 
-            (*userItr).addShoppingList(*listItr);
+            (*otherUserItr).addShoppingList(currentList);
             listBox->Append(listName);  //this adds the listName to listboxes of all users
             // i have to clear and then fill again the selected user's list box
             listBox->Clear();
-            fillListBox(selectedUser);
+            updateLists(currentUser);
 
             wxLogMessage(listName + " shared with " + username);
         }
         catch(std::runtime_error& e) {
-            wxLogError( e.what());
+            wxMessageBox(e.what(), "Error", wxICON_ERROR);
             return;
         }
     }
 
+}
+
+void MainFrame::onItemChecked(wxCommandEvent &evt) {
+    setItemCheckStatus();
+}
+
+void MainFrame::setItemCheckStatus() {
+    int index = itemCheckListBox->GetSelection();
+    if(index == wxNOT_FOUND)
+        return;
+    wxString itemName = itemCheckListBox->GetString(index);
+    Item& currentItem = currentList->getItem(itemName.ToStdString());
+    currentItem.setCheck(itemCheckListBox->IsChecked(index));
 }
 
 
