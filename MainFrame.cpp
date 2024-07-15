@@ -277,6 +277,9 @@ void MainFrame::addUserFromInput() {
     if (username.IsEmpty()) {
         wxMessageBox("User name cannot be empty!", "Error", wxICON_ERROR);
         return;
+    }else if(isInList(username.ToStdString())) {
+        wxMessageBox("User already existing!", "Error", wxICON_ERROR);
+        return;
     }
     User user(username.ToStdString());
     users.push_back(user);
@@ -469,26 +472,25 @@ void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
 
 void MainFrame::onShareListButtonClicked(wxCommandEvent &evt) {
     wxTextEntryDialog dialog(this,
-                      wxT("Enter a user you want to share the list with."), wxT("Share"));
+                      wxT("Enter the username you want to share the list with."), wxT("Share"));
     if (dialog.ShowModal() == wxID_OK) {
         std::string username = dialog.GetValue().ToStdString();
         try {
-            auto otherUserItr = findUser(username);
+            auto otherUserItr = findUser(username); // throws exception
             int listIndex = listBox->GetSelection();
-
             wxString listName = listBox->GetString(listIndex);
 
-            // adding the list
+            if ( (*otherUserItr).isInShoppingLists(listName.ToStdString()) ) {
+                wxMessageBox(username + " already has a list with this name!");
+                return;
+            }
 
             (*otherUserItr).addShoppingList(currentList);
-            listBox->Append(listName);  //this adds the listName to listboxes of all users
-            // i have to clear and then fill again the selected user's list box
+            listBox->Append(listName);
+            // this adds the listName to list-boxes of all users, so I have to clear and then fill again the selected user's list box
             listBox->Clear();
             updateLists(currentUser);
-
-            wxLogMessage(listName + " shared with " + username);
-        }
-        catch(std::runtime_error& e) {
+        }catch(std::runtime_error& e) {
             wxMessageBox(e.what(), "Error", wxICON_ERROR);
             return;
         }
@@ -507,6 +509,19 @@ void MainFrame::setItemCheckStatus() {
     wxString itemName = itemCheckListBox->GetString(index);
     Item& currentItem = currentList->getItem(itemName.ToStdString());
     currentItem.setCheck(itemCheckListBox->IsChecked(index));
+}
+
+bool MainFrame::isInList(const std::string &username) {
+    bool found = false;
+    auto it = users.begin();
+    while(it != users.end()) {
+        if (username == (*it).getUsername()) {
+            found = true;
+            break;
+        }
+        it++;
+    }
+    return found;
 }
 
 

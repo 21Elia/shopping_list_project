@@ -48,6 +48,7 @@ private:
     void addUserFromInput();
     void addListFromInput();
     void addItemFromInput();
+    bool isInList(const std::string& username);
     void updateLists(User* user);
     void updateItems(const std::shared_ptr<ShoppingList> &shoppingList);
     void setItemCheckStatus();

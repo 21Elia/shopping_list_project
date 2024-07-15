@@ -15,10 +15,10 @@ public:
     explicit ShoppingList(std::string name) : name(std::move(name)) {}
 
     void addItem(const Item& item);
-    void removeItem(const std::string& name);
+    void removeItem(const std::string& itemName);
     void printDetails();
     int getNumItems() const;
-    Item& getItem(std::string name);
+    Item& getItem(std::string itemName);
 
     bool isInList(const Item& givenItem);
 

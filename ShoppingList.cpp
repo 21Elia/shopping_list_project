@@ -7,9 +7,11 @@
 void ShoppingList::addItem(const Item &item) {
     if(isInList(item)) {
         Item& existingItem = getItem(item.getName());
-        if(existingItem.isChecked())
+        if(existingItem.isChecked()) {
             existingItem.setCheck(false);
-        existingItem.setQuantity(existingItem.getQuantity() + item.getQuantity());
+            existingItem.setQuantity(item.getQuantity());
+        }else
+            existingItem.setQuantity(existingItem.getQuantity() + item.getQuantity());
     }
     else
         items.push_back(item);
