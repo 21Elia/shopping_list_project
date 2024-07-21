@@ -48,3 +48,30 @@ bool User::isInShoppingLists(const std::string &name) {
     }
     return found;
 }
+
+void User::removeShoppingListOnID(int num) {
+    auto it = shoppinglists.begin();
+    while(it != shoppinglists.end()) {
+        if(num == (*it)->getID()) {
+            break;
+        }
+        it++;
+    }
+    if(it != shoppinglists.end())
+        shoppinglists.erase(it);
+    else
+        throw std::invalid_argument("Shopping list not found. Try again.");
+}
+
+std::list<std::shared_ptr<ShoppingList>>::iterator User::findShoppingListOnID(int num) {
+    auto it = shoppinglists.begin();
+    while (it != shoppinglists.end()) {
+        if (num == (*it)->getID())
+            break;
+        it++;
+    }
+    if (it != shoppinglists.end())
+        return it;
+    else
+        throw std::invalid_argument("List not found");
+}

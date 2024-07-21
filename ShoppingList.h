@@ -12,15 +12,14 @@
 
 class ShoppingList : public Subject {
 public:
-    explicit ShoppingList(std::string name) : name(std::move(name)) {}
+    explicit ShoppingList(std::string name, int ID = 1) : name(std::move(name)), ID(ID), shared(false){}
 
     void addItem(const Item& item);
     void removeItem(const std::string& itemName);
-    void printDetails();
     int getNumItems() const;
-    Item& getItem(std::string itemName);
+    void printDetails();
 
-    bool isInList(const Item& givenItem);
+    bool isInItems(const Item& givenItem);
 
     void notify() override;
     void subscribe(Observer* o) override;
@@ -28,8 +27,15 @@ public:
 
     std::string getName() const {return name;}
     std::vector<Item> getItems() const{return items;}
+    Item& getItem(std::string itemName);
+    int getID() const {return ID;}
+    void setID(int num) { ID = num;}
+    bool isShared() const {return shared;}
+    void setShared(bool value) { shared = value;}
 
 private:
+    int ID;
+    bool shared;
     std::string name;
     std::vector<Item> items;
     std::list<Observer*> observers;

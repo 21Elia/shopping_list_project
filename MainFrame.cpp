@@ -8,16 +8,23 @@
 #include <memory>
 #include "User.h"
 #include "ShoppingList.h"
+#include <fstream>
+#include <algorithm>
+#include <filesystem>
 
 enum IDs {
     WXK_MACOS_DELETE = 8
 };
+
+static int nextUserID = 1;
+static int nextListID = 1;
 
 MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
     setupUserMenu();
     setupListsMenu();
     setupItemsMenu();
     bindEventHandlers();
+    loadDataToUI();
 
     setupFrameSizers();
 
@@ -262,6 +269,9 @@ void MainFrame::bindEventHandlers() {
     spinCtrl->Bind(wxEVT_TEXT_ENTER, &MainFrame::onItemInputEnter, this);
     itemCheckListBox->Bind(wxEVT_KEY_DOWN, &MainFrame::onItemCheckListKeyDown, this);
     itemCheckListBox->Bind(wxEVT_CHECKLISTBOX, &MainFrame::onItemChecked, this);
+
+    //on close
+    this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::onWindowClosed, this);
 }
 
 void MainFrame::onAddUserButtonClicked(wxCommandEvent &evt) {
@@ -277,13 +287,18 @@ void MainFrame::addUserFromInput() {
     if (username.IsEmpty()) {
         wxMessageBox("User name cannot be empty!", "Error", wxICON_ERROR);
         return;
-    }else if(isInList(username.ToStdString())) {
+    }else if(isInUsers(username.ToStdString())) {
         wxMessageBox("User already existing!", "Error", wxICON_ERROR);
         return;
     }
-    User user(username.ToStdString());
-    users.push_back(user);
-    userListBox->Insert(user.getUsername(), userListBox->GetCount());
+
+    // adding the new user
+
+    User addedUser(username.ToStdString());
+    addedUser.setID(++nextUserID);
+
+    users.push_back(addedUser);
+    userListBox->Insert(addedUser.getName(), userListBox->GetCount());
     userInputField->Clear();
     userInputField->SetFocus();
 }
@@ -294,8 +309,33 @@ void MainFrame::onUserListKeyDown(wxKeyEvent &evt) {
         case WXK_MACOS_DELETE:
             if (index != wxNOT_FOUND) {
                 std::string username = userListBox->GetString(index).ToStdString();
-                auto it = findUser(username);
-                users.erase(it);
+                auto selectedUser = findUser(username);
+
+                // updating usersListsMap
+                int userID = selectedUser->getID();
+                usersListsMap.erase(userID);
+
+                // updating shareMap
+                auto shoppingLists = selectedUser->getShoppingLists();
+                for(const auto& shoppingList : shoppingLists) {
+                    std::list<User>& sharedUsers = shareMap[shoppingList->getID()];
+                    for(auto itr = sharedUsers.begin(); itr != sharedUsers.end(); ) {
+                        if(itr->getName() == selectedUser->getName())
+                            itr = sharedUsers.erase(itr);
+                        else
+                            ++itr;
+                    }
+                }
+
+                // case for when the sharedUsers size is 1 -> MEANING THE USER HAS A LIST AND THAT LIST IS SHARED WITH HIMSELF
+                for(const auto& shoppingList : shoppingLists) {
+                    std::list<User>& sharedUsers = shareMap[shoppingList->getID()];
+                    if(sharedUsers.size() == 1)
+                        sharedUsers.clear();
+                }
+
+                // removing the user from users
+                users.erase(selectedUser);
                 userListBox->Delete(index);
             }
             break;
@@ -305,7 +345,20 @@ void MainFrame::onUserListKeyDown(wxKeyEvent &evt) {
 std::vector<User>::iterator MainFrame::findUser(const std::string &username) {
     auto it = users.begin();
     while(it != users.end()) {
-        if((*it).getUsername() == username)
+        if((*it).getName() == username)
+            break;
+        it++;
+    }
+    if(it != users.end())
+        return it;
+    else
+        throw std::runtime_error("User not found.");
+}
+
+std::vector<User>::iterator MainFrame::findUserOnID(int num) {
+    auto it = users.begin();
+    while(it != users.end()) {
+        if((*it).getID() == num)
             break;
         it++;
     }
@@ -346,19 +399,23 @@ void MainFrame::addListFromInput() {
     }
 
     //creating shopping list and adding it to the corresponding user
+
     std::shared_ptr<ShoppingList> myShoppingList(new ShoppingList(listName.ToStdString()));
+    myShoppingList->setID(++nextListID);
+
+    //updating the usersListsMap
+    usersListsMap[currentUser->getID()].push_back(myShoppingList->getID());
 
     try {
-        (*currentUser).addShoppingList(myShoppingList);
+        currentUser->addShoppingList(myShoppingList);
     }
     catch(std::invalid_argument& e) {
-        wxLogError(e.what());
+        wxLogMessage(e.what(), "Error");
         listInputField->Clear();
         return;
     }
-
     //adding the listName to the listBox
-    listBox->Insert(listName, listBox->GetCount()); //second parameter is the listBox index
+    listBox->Append(listName);
     listInputField->Clear();
     listInputField->SetFocus();
 }
@@ -367,10 +424,35 @@ void MainFrame::onListKeyDown(wxKeyEvent &evt) {
     int index = listBox->GetSelection();
     switch ( evt.GetKeyCode() ) {
         case WXK_MACOS_DELETE:
-            if(index != wxNOT_FOUND) {
+            if(index != wxNOT_FOUND && index >= 0 && index < listBox->GetCount()) {
                 std::string listName = listBox->GetString(index).ToStdString();
-                (*currentUser).removeShoppingList(listName);
+                currentList = *currentUser->findShoppingList(listName);
 
+                // update usersListsMap
+                int listID = currentList->getID();
+                auto& listIDs = usersListsMap[currentUser->getID()];
+                listIDs.remove(listID);
+
+                // update shareMap
+                std::list<User>& currentListSharedUsers = shareMap[listID];
+                for(auto it = currentListSharedUsers.begin(); it != currentListSharedUsers.end(); ++it) {
+                    if(it->getName() == currentUser->getName()) {
+                        it = currentListSharedUsers.erase(it); // erase function removes the element it points to and
+                                                        // also returns an iterator to the next element to avoid it pointing to null
+                        break;
+                    }
+                }
+
+                //case for when the sharedUsers size is 1 -> MEANING THE USER HAS A LIST AND THAT LIST IS SHARED WITH HIMSELF
+                auto shoppingLists = currentUser->getShoppingLists();
+                for(const auto& shoppingList : shoppingLists) {
+                    std::list<User>& sharedUsers = shareMap[shoppingList->getID()];
+                    if(sharedUsers.size() == 1)
+                        sharedUsers.clear();
+                }
+
+
+                (*currentUser).removeShoppingList(listName);
                 listBox->Delete(index);
             }
             break;
@@ -381,7 +463,7 @@ void MainFrame::onListDoubleClick(wxMouseEvent &evt) {
     int index = listBox->GetSelection();
     if(index != wxNOT_FOUND) {
         std::string listName = listBox->GetString(index).ToStdString();
-        currentList = (* (*currentUser).findShoppingList(listName) );
+        currentList = ( *(currentUser->findShoppingList(listName)) );
         updateItems(currentList);
         itemInputField->Clear();
         listsPanel->Hide();
@@ -400,8 +482,8 @@ void MainFrame::onBackListsButtonClicked(wxCommandEvent &evt) {
 void MainFrame::updateLists(User *user) {
     listBox->Clear();
     std::list<std::shared_ptr<ShoppingList>> shoppinglists = user->getShoppingLists();
-    for(auto const& shoppinglist : shoppinglists) {
-        listBox->Append(shoppinglist->getName());
+    for(auto const& shoppingList : shoppinglists) {
+        listBox->Append(shoppingList->getName());
     }
 }
 
@@ -434,6 +516,7 @@ void MainFrame::addItemFromInput() {
 }
 
 void MainFrame::onBackItemsButtonClicked(wxCommandEvent &evt) {
+    updateLists(currentUser);
     itemsPanel->Hide();
     listsPanel->Show();
     Layout();
@@ -451,7 +534,9 @@ void MainFrame::updateItems(const std::shared_ptr<ShoppingList> &shoppingList) {
         int index = itemCheckListBox->GetCount();
 
         itemCheckListBox->Append(itemName);
-        itemCheckListBox->Check(index, item.isChecked());
+        if (index >= 0 && index < itemCheckListBox->GetCount()) {
+            itemCheckListBox->Check(index, item.isChecked());
+        }
         quantityListBox->Append(itemQuantity);
     }
 }
@@ -460,7 +545,7 @@ void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
     int itemIndex = itemCheckListBox->GetSelection();
     switch( evt.GetKeyCode() ) {
         case WXK_MACOS_DELETE:
-            if(itemIndex != wxNOT_FOUND) {
+            if(itemIndex != wxNOT_FOUND && itemIndex >= 0 && itemIndex < itemCheckListBox->GetCount()) {
                 std::string itemName = (itemCheckListBox->GetString(itemIndex).ToStdString());
                 currentList->removeItem(itemName);
                 itemCheckListBox->Delete(itemIndex);
@@ -472,25 +557,32 @@ void MainFrame::onItemCheckListKeyDown(wxKeyEvent &evt) {
 
 void MainFrame::onShareListButtonClicked(wxCommandEvent &evt) {
     wxTextEntryDialog dialog(this,
-                      wxT("Enter the username you want to share the list with."), wxT("Share"));
+                      wxT("Enter the username you want to share the list with:"), wxT("Share"));
     if (dialog.ShowModal() == wxID_OK) {
         std::string username = dialog.GetValue().ToStdString();
         try {
-            auto otherUserItr = findUser(username); // throws exception
+            auto otherUser = findUser(username); // throws exception if not found
             int listIndex = listBox->GetSelection();
             wxString listName = listBox->GetString(listIndex);
 
-            if ( (*otherUserItr).isInShoppingLists(listName.ToStdString()) ) {
-                wxMessageBox(username + " already has a list with this name!");
+            if ( otherUser->isInShoppingLists(listName.ToStdString()) ) {
+                wxMessageBox(wxString::Format("%s already has a list with this name!", username),
+                             "Error", wxICON_ERROR);
                 return;
             }
 
-            (*otherUserItr).addShoppingList(currentList);
-            listBox->Append(listName);
-            // this adds the listName to list-boxes of all users, so I have to clear and then fill again the selected user's list box
-            listBox->Clear();
-            updateLists(currentUser);
-        }catch(std::runtime_error& e) {
+            if(currentList->isShared()) {
+                auto& sharedUsers = shareMap[currentList->getID()];
+                sharedUsers.push_back(*otherUser);
+                otherUser->addShoppingList(currentList);
+                wxMessageBox(wxString::Format("%s shared with %s!", listName, username));
+            }else {
+                currentList->setShared(true);
+                shareMap[currentList->getID()].push_back(*otherUser); //adding otherUser in the empty vector of sharedUsers
+                otherUser->addShoppingList(currentList);
+                wxMessageBox(wxString::Format("%s shared with %s", listName, username));
+            }
+        }catch(std::exception& e) {
             wxMessageBox(e.what(), "Error", wxICON_ERROR);
             return;
         }
@@ -504,18 +596,18 @@ void MainFrame::onItemChecked(wxCommandEvent &evt) {
 
 void MainFrame::setItemCheckStatus() {
     int index = itemCheckListBox->GetSelection();
-    if(index == wxNOT_FOUND)
+    if(index == wxNOT_FOUND || index < 0 || index >= itemCheckListBox->GetCount())
         return;
     wxString itemName = itemCheckListBox->GetString(index);
     Item& currentItem = currentList->getItem(itemName.ToStdString());
     currentItem.setCheck(itemCheckListBox->IsChecked(index));
 }
 
-bool MainFrame::isInList(const std::string &username) {
+bool MainFrame::isInUsers(const std::string &username) {
     bool found = false;
     auto it = users.begin();
     while(it != users.end()) {
-        if (username == (*it).getUsername()) {
+        if (username == (*it).getName()) {
             found = true;
             break;
         }
@@ -524,7 +616,217 @@ bool MainFrame::isInList(const std::string &username) {
     return found;
 }
 
+void MainFrame::onWindowClosed(wxCloseEvent &evt) {
+    saveData("data.txt");
+    evt.Skip();
+}
 
+void MainFrame::saveData(const std::string& fileName) {
+    std::ofstream outFile;
+    outFile.open("data.txt");
+    if(!outFile.is_open()) {
+        wxLogError("Error writing into file %s", fileName);
+        return;
+    }
+
+    if(users.empty()) {
+        outFile << 0 << std::endl << 0 << std::endl << 0;
+        return;
+    }
+
+    outFile << nextUserID << std::endl; // max user ID
+    outFile << nextListID << std::endl; // max list ID
+    outFile << users.size() << std::endl; // num of users saved
+    outFile << "===" << std::endl;
+
+    for(const auto& user : users) {
+        std::string username = user.getName();
+        std::replace(username.begin(), username.end(), ' ', '_');
+        outFile << username << " " << user.getID() << std::endl;
+
+        auto shoppingLists = user.getShoppingLists();
+        outFile << shoppingLists.size() << std::endl;
+        for(const auto& shoppingList : shoppingLists) {
+            std::string listName = shoppingList->getName();
+            std::replace(listName.begin(), listName.end(), ' ', '_');
+            outFile << listName << " " << shoppingList->getID() << std::endl; // listName , listID
+
+            auto items = shoppingList->getItems();
+            outFile << items.size() << std::endl;
+            for(const auto& item : items) {
+                std::string itemName = item.getName();
+                std::replace(itemName.begin(), itemName.end(), ' ', '_');
+                outFile << itemName << " " << item.getQuantity() << " " << item.isChecked() << std::endl;
+            }
+            outFile << "---" << std::endl; // divider between lists
+        }
+        outFile << "===" << std::endl; // divider between users
+    }
+
+    // Printing list's IDs and the users the lists are shared with
+
+    outFile << "USERS_SHARING_THE_ID" << std::endl;
+    outFile << shareMap.size() << std::endl;
+    for (const auto& pair : shareMap) {
+        auto sharedUsers = pair.second;
+        auto ID = pair.first;
+        outFile << ID << " " << sharedUsers.size(); // listID & number of users who share the list
+        for (const auto& sharedUser : sharedUsers) {
+            std::string sharedUsername;
+            sharedUsername = sharedUser.getName();
+            std::replace(sharedUsername.begin(), sharedUsername.end(), ' ', '_');
+            outFile << " " << sharedUsername;
+        }
+        outFile << std::endl;
+    }
+    outFile.close();
+}
+
+
+void MainFrame::loadDataToUI() {
+    loadData("data.txt");
+    for(const auto& user : users) {
+        userListBox->Append(user.getName());
+        auto lists = user.getShoppingLists();
+        for (const auto& list : lists) {
+            listBox->Append(list->getName());
+            auto items = list->getItems();
+            for (const auto& item : items) {
+                itemCheckListBox->Append(item.getName());
+                itemCheckListBox->Check(itemCheckListBox->GetCount() -1, item.isChecked());
+                wxString quantityStr = wxString::Format("%d", item.getQuantity());
+                quantityListBox->Append(quantityStr);
+            }
+        }
+    }
+}
+
+void MainFrame::loadData(const std::string &fileName) {
+    std::ifstream inFile;
+    if(!std::filesystem::exists(fileName) || std::filesystem::is_empty(fileName)) {
+        wxLogMessage("Not able to read %s: file is empty or doesn't exist", fileName, "Error");
+        return;
+    }
+    inFile.open(fileName);
+    if(!inFile.is_open()) {
+        wxLogMessage("Failed to open %s", fileName, "Error");
+        return;
+    }
+
+    // making sure users and map are empty
+
+    users.clear();
+    shareMap.clear();
+
+    int userCount, listCount, itemCount;
+    std::string line; // string to skip dividers
+
+    inFile >> nextUserID;
+    inFile >> nextListID;
+    inFile >> userCount;
+    if(userCount <= 0) {
+        return;
+    }
+
+    for(int i = 0; i < userCount; i++) {
+        inFile >> line; // ignoring user divider
+
+        std::string username;
+        int userID;
+
+        inFile >> username;
+        inFile >> userID;
+
+        std::replace(username.begin(), username.end(), '_', ' ');
+        User user(username, userID);
+        users.push_back(user);
+        User& newUser = users.back();
+
+        inFile >> listCount;
+        std::list<int> listIDs; // temporary list to store list IDs for the user to rebuild usersListsMap
+        for(int j = 0; j < listCount; j++) {
+            std::string listName;
+            int listID;
+
+            inFile >> listName;
+            std::replace(listName.begin(), listName.end(), '_', ' ');
+            inFile >> listID;
+
+            std::shared_ptr<ShoppingList> shoppingList (new ShoppingList(listName, listID));
+            newUser.addShoppingList(shoppingList);
+            listIDs.push_back(listID); // Collect list IDs
+
+            inFile >> itemCount;
+            for(int k = 0; k < itemCount; k++) {
+                std::string itemName;
+                int quantity;
+                bool check;
+                inFile >> itemName;
+                std::replace(itemName.begin(), itemName.end(), '_', ' ');
+                inFile >> quantity;
+                inFile >> check;
+
+                Item item(itemName, "", quantity, check);
+                shoppingList->addItem(item);
+            }
+            inFile >> line;
+        }
+        usersListsMap[userID] = listIDs; // Update the map with user ID and list IDs
+    }
+
+    // reading the shared information
+
+    inFile >> line; // skips the last "===" before USERS_SHARING_THE_ID
+    inFile >> line; // skips "USERS_SHARING_THE_ID"
+
+    if(line != "USERS_SHARING_THE_ID") {
+        wxMessageBox(wxString::Format("Expected USERS_SHARING_THE_ID while reading %s but got something else",
+                     fileName), "Loading Error", wxICON_ERROR);
+        return;
+    }
+
+    int sharedListCount, sharedUserCount;
+    inFile >> sharedListCount;
+
+    for(int i = 0; i < sharedListCount; i++) {
+        int listID;
+        std::list<User> sharedUsers;
+
+        inFile >> listID;
+        inFile >> sharedUserCount;
+        for(int j = 0; j < sharedUserCount; j++) {
+            std::string username;
+            inFile >> username;
+            std::replace(username.begin(), username.end(), '_', ' ');
+            try {
+
+                User& sharedUser = *findUser(username); // throws exception if not found (shouldn't throw any exception tho!!)
+                sharedUsers.push_back(sharedUser);
+
+                sharedUser.removeShoppingListOnID(listID);
+                sharedUser.addShoppingList(findShoppingListByID(listID));
+
+            }catch(std::exception& e) {
+                wxLogMessage(e.what(), "Error");
+                return;
+            }
+        }
+        shareMap[listID] = sharedUsers;
+    }
+    inFile.close();
+}
+
+std::shared_ptr<ShoppingList> MainFrame::findShoppingListByID(int listID) {
+    for (const auto& user : users) {
+        auto lists = user.getShoppingLists();
+        for (const auto& list : lists) {
+            if (list->getID() == listID) {
+                return list;
+            }
+        }
+    }
+    throw std::runtime_error("List not found.");
+}
 
 
 

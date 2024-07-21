@@ -5,7 +5,7 @@
 #include "ShoppingList.h"
 
 void ShoppingList::addItem(const Item &item) {
-    if(isInList(item)) {
+    if(isInItems(item)) {
         Item& existingItem = getItem(item.getName());
         if(existingItem.isChecked()) {
             existingItem.setCheck(false);
@@ -40,7 +40,7 @@ void ShoppingList::printDetails() {
     std::cout << "Total Items: " << getNumItems() << std::endl;
 }
 
-bool ShoppingList::isInList(const Item &givenItem) {
+bool ShoppingList::isInItems(const Item &givenItem) {
     bool found = false;
     for(const auto& item : items) {
         if(givenItem.getName() == item.getName())

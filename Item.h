@@ -13,6 +13,7 @@ public:
 
     explicit Item(std::string name, std::string category, int num = 1, bool check = false) :
             name(std::move(name)), category(std::move(category)), quantity(num), checked(check) {}
+
     void setName(std::string n) {name = n;}
     void setCategory(std::string category) {category = category;}
     void setQuantity(int num) {quantity = num;}
