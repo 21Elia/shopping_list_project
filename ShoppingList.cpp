@@ -5,6 +5,7 @@
 #include "ShoppingList.h"
 
 void ShoppingList::addItem(const Item &item) {
+    //checking negative item quantity
     if(isInItems(item)) {
         Item& existingItem = getItem(item.getName());
         if(existingItem.isChecked()) {
@@ -33,7 +34,7 @@ void ShoppingList::removeItem(const std::string& name) {
 }
 
 void ShoppingList::printDetails() {
-    std::cout << "------SOPPING LIST------" << "\n"<< std::endl;
+    std::cout << "------SHOPPING LIST------" << "\n"<< std::endl;
     for(const auto& item : items) {
         std::cout << item.getName() << ": " << item.getQuantity() << "\n" << std::endl;
     }

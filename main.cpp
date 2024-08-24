@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Item.h"
 #include "ShoppingList.h"
+#include "ShoppingListNotifier.h"
 
 /*
  * Classi che rappresentano una lista della spesa (es. Listonic): un utente deve avere
@@ -14,13 +15,18 @@
 /*
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    Item item1("Bread", "carboidrati", 4);
-    Item item2 ("yogurt", "colazione", 2);
-    std::cout << item1.getQuantity() << std::endl;
+
+    Item item1("Apple", "Fruit", 4);
+    Item item2 ("Cereals", "Breakfast", 2);
+    Item item3 ("Pasta", "Meal", 1);
+
+
     ShoppingList list1 ("Grocery List");
+    ShoppingListNotifier listNotifier(&list1);
     list1.addItem(item1);
     list1.addItem(item2);
-    list1.printDetails();
+    list1.addItem(item3);
 
+    list1.removeItem("Cereals");
 }
-*/
+ */

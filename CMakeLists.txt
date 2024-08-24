@@ -10,6 +10,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_library(${PROJECT_NAME}_lib
+        Subject.cpp
+        Observer.cpp
+        Item.cpp
+        ShoppingList.cpp
+        App.cpp
+        User.cpp
+        ShoppingListNotifier.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_lib ${wxWidgets_LIBRARIES})
+
 add_executable(ShoppingListApp main.cpp
         Subject.h
         Subject.cpp
@@ -24,6 +36,9 @@ add_executable(ShoppingListApp main.cpp
         App.cpp
         User.cpp
         ShoppingListNotifier.h
-        ShoppingListNotifier.cpp)
+        ShoppingListNotifier.cpp
+)
 
-target_link_libraries(ShoppingListApp ${wxWidgets_LIBRARIES})
+target_link_libraries(ShoppingListApp ${PROJECT_NAME}_lib ${wxWidgets_LIBRARIES})
+
+add_subdirectory(tests)

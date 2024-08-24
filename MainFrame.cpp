@@ -19,6 +19,8 @@ enum IDs {
 static int nextUserID = 1;
 static int nextListID = 1;
 
+
+
 MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
     setupUserMenu();
     setupListsMenu();

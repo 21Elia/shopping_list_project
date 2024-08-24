@@ -12,7 +12,11 @@ class Item {
 public:
 
     explicit Item(std::string name, std::string category, int num = 1, bool check = false) :
-            name(std::move(name)), category(std::move(category)), quantity(num), checked(check) {}
+            name(std::move(name)), category(std::move(category)), quantity(num), checked(check) {
+        if (quantity <= 0) {
+            throw std::invalid_argument("Quantity must be a positive number.");
+        }
+    }
 
     void setName(std::string n) {name = n;}
     void setCategory(std::string category) {category = category;}
