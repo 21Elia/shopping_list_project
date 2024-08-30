@@ -36,7 +36,10 @@ void ShoppingList::removeItem(const std::string& name) {
 void ShoppingList::printDetails() {
     std::cout << "------SHOPPING LIST------" << "\n"<< std::endl;
     for(const auto& item : items) {
-        std::cout << item.getName() << ": " << item.getQuantity() << "\n" << std::endl;
+        if(item.isUndefinedQuantity())
+            std::cout << item.getName() << ": " << "Quantity Undefined" << "\n" <<  std::endl;
+        else
+            std::cout << item.getName() << ": " << item.getQuantity() << "\n" << std::endl;
     }
     std::cout << "Total Items: " << getNumItems() << std::endl;
 }

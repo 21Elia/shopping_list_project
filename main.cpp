@@ -11,14 +11,14 @@
  * quali questi siano. Si possono o avere più utenti che condividono la stessa lista
  */
 
-
 /*
+
 int main() {
     std::cout << "Hello, World!" << std::endl;
 
     Item item1("Apple", "Fruit", 4);
     Item item2 ("Cereals", "Breakfast", 2);
-    Item item3 ("Pasta", "Meal", 1);
+    Item item3 ("Pasta", "Meal", 0);
 
 
     ShoppingList list1 ("Grocery List");
@@ -29,4 +29,5 @@ int main() {
 
     list1.removeItem("Cereals");
 }
+
  */

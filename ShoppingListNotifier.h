@@ -11,7 +11,7 @@
 
 class ShoppingListNotifier : public Observer {
 public:
-    ShoppingListNotifier(ShoppingList* shoppingList);
+    explicit ShoppingListNotifier(ShoppingList* shoppingList);
 
     void update() override;
 

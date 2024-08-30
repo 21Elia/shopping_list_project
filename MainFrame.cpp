@@ -177,7 +177,7 @@ void MainFrame::setupItemsMenu() {
     itemInputField->SetFont(inputFont);
 
     spinCtrl = new wxSpinCtrl(itemsPanel, wxID_ANY, "",wxDefaultPosition,wxDefaultSize,
-                              wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 1, 100, 1);
+                              wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 100, 0);
     spinCtrl->SetFont(inputFont);
 
     addItemButton = new wxButton(itemsPanel, wxID_ANY, "Add");
@@ -512,7 +512,7 @@ void MainFrame::addItemFromInput() {
     updateItems(currentList);
 
     //reset controls
-    spinCtrl->SetValue(1);
+    spinCtrl->SetValue(0);
     itemInputField->Clear();
     itemInputField->SetFocus();
 }
@@ -539,7 +539,10 @@ void MainFrame::updateItems(const std::shared_ptr<ShoppingList> &shoppingList) {
         if (index >= 0 && index < itemCheckListBox->GetCount()) {
             itemCheckListBox->Check(index, item.isChecked());
         }
-        quantityListBox->Append(itemQuantity);
+        if(item.isUndefinedQuantity())
+            quantityListBox->Append(" ");
+        else
+            quantityListBox->Append(itemQuantity);
     }
 }
 
