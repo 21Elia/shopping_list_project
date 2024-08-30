@@ -13,6 +13,6 @@ TEST_F(ItemTest, negativeQuantityItem) {
 }
 
 TEST_F(ItemTest, undefinedQuantityItem) {
-    Item item("Apple", "Fruit", 0);
+    Item item("Orange", "Fruit", 0);
     EXPECT_TRUE(item.isUndefinedQuantity());
 }
