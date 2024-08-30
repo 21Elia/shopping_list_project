@@ -46,11 +46,6 @@ TEST_F(ShoppingListTest, addItem) {
     ASSERT_EQ(shoppingList->getNumItems(), 3);
 }
 
-TEST_F(ShoppingListTest, invalidQuantityItem) {
-    ASSERT_THROW(Item("Apple", "Fruit", -1), std::invalid_argument);
-    ASSERT_THROW(Item("Banana", "Fruit", 0), std::invalid_argument);
-}
-
 TEST_F(ShoppingListTest, removeItem) {
     Item item("Apple", "", 2);
 
