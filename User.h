@@ -14,7 +14,7 @@
 
 class User {
 public:
-    User(std::string  username, int ID = 1) : username(std::move(username)), ID(ID) {}
+    explicit User(const std::string&  username, int ID = 1) : username(username), ID(ID) {}
 
     void addShoppingList(const std::shared_ptr<ShoppingList>& list);
 

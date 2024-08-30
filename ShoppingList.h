@@ -12,7 +12,7 @@
 
 class ShoppingList : public Subject {
 public:
-    explicit ShoppingList(std::string name, int ID = 1) : name(std::move(name)), ID(ID), shared(false){}
+    explicit ShoppingList(const std::string& name, int ID = 1) : name(name), ID(ID), shared(false){}
 
     void addItem(const Item& item);
     void removeItem(const std::string& itemName);
@@ -27,11 +27,12 @@ public:
 
     std::string getName() const {return name;}
     std::vector<Item> getItems() const{return items;}
-    Item& getItem(std::string itemName);
+    Item& getItem(const std::string& itemName);
     int getID() const {return ID;}
     void setID(int num) { ID = num;}
     bool isShared() const {return shared;}
     void setShared(bool value) { shared = value;}
+    ~ShoppingList() override;
 
 private:
     int ID;

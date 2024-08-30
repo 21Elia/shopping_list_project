@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.26)
 project(ShoppingListApp)
 
-find_package(wxWidgets REQUIRED COMPONENTS core base)
-include(${wxWidgets_USE_FILE})
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(wxWidgets REQUIRED COMPONENTS core base)
+include(${wxWidgets_USE_FILE})
 
 add_library(${PROJECT_NAME}_lib
         Subject.cpp

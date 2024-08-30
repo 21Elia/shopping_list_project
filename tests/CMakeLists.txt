@@ -1,10 +1,10 @@
 enable_testing()
 
-find_package(GTest REQUIRED)
+add_subdirectory(./lib/googletest-1.15.2)
+set(gtest_SOURCE_DIR, ./lib/googletest-1.15.2/)
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
-include_directories(${GTEST_INCLUDE_DIRS})
-
-include_directories(${CMAKE_SOURCE_DIR}/src)
+set(TEST_SOURCE_FILE test_item.cpp test_shopping_list.cpp test_user.cpp)
 
 add_executable(test_shopping_list
         test_shopping_list.cpp

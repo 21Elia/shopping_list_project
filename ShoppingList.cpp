@@ -71,7 +71,7 @@ int ShoppingList::getNumItems() const {
     return total;
 }
 
-Item& ShoppingList::getItem(std::string name) {
+Item& ShoppingList::getItem(const std::string& name) {
     auto it = items.begin();
     while(it != items.end()) {
         if(name == (*it).getName()) {
@@ -83,5 +83,9 @@ Item& ShoppingList::getItem(std::string name) {
         return (*it);
     else
         throw std::invalid_argument("Item not found. Try again.");
+}
+
+ShoppingList::~ShoppingList() {
+        observers.clear();
 }
 
