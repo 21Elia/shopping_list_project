@@ -98,6 +98,8 @@ TEST_F(ShoppingListTest, getItem) {
 
 TEST_F(ShoppingListTest, getItemNotFound) {
     ASSERT_THROW(shoppingList->getItem("NonExistingItem"), std::invalid_argument);
+    // ricontrollando il codice alla fine mi sono accorto di aver già testato il throw di questo metodo.
+    // farò comunque un commit di questo commento per sicurezza
 }
 
 TEST_F(ShoppingListTest, setAndIsShared) {
