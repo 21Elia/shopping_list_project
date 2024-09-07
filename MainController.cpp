@@ -8,7 +8,6 @@
 #include "User.h"
 #include "ShoppingList.h"
 #include <wx/wx.h>
-#include <map>
 
 enum IDs {
     WXK_MACOS_DELETE = 8
@@ -16,7 +15,6 @@ enum IDs {
 
 MainController::MainController(MainFrame *view) : view(view), nextUserID(0), nextListID(0), dataManager() {
     fileName = "data.txt";
-    //loadData();
 }
 
 void MainController::onAddUserButtonClicked(wxCommandEvent &evt) {

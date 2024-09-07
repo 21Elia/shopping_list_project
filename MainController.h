@@ -6,7 +6,8 @@
 #define SHOPPINGLISTAPP_MAINCONTROLLER_H
 
 class MainFrame;
-// DO NOT INCLUDE "MainFrame.h" IN MainController.h -> IT CONFUSES THE COMPILER AND view->Layout(); doesn't work anymore
+// DO NOT INCLUDE "MainFrame.h" IN MainController.h
+// IT CONFUSES THE COMPILER AND view->Layout(); doesn't work anymore
 #include <wx/wx.h>
 #include "User.h"
 #include "ShoppingList.h"

@@ -22,13 +22,7 @@ public:
 
     wxPanel* getUserPanel() const;
 
-    wxStaticText* getNewUserLabel() const;
-
     wxTextCtrl* getUserInputField() const;
-
-    wxButton* getAddUserButton() const;
-
-    wxStaticText* getSelectUserLabel() const;
 
     wxListBox* getUserListBox() const;
 

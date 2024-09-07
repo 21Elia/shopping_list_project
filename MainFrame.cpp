@@ -4,15 +4,8 @@
 
 #include "MainFrame.h"
 #include <wx/wx.h>
-#include <vector>
 #include <memory>
-#include "User.h"
-#include "ShoppingList.h"
-#include <fstream>
-#include <algorithm>
-#include <filesystem>
 #include "MainController.h"
-#include <map>
 
 MainFrame::MainFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title){
     controller = new MainController(this);
