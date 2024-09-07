@@ -1,8 +1,3 @@
-#include <iostream>
-#include "Item.h"
-#include "ShoppingList.h"
-#include "ShoppingListNotifier.h"
-
 /*
  * Classi che rappresentano una lista della spesa (es. Listonic): un utente deve avere
  * diverse liste della spesa dove segnare oggetti da acquistare che appartengono a
@@ -11,8 +6,36 @@
  * quali questi siano. Si possono o avere più utenti che condividono la stessa lista
  */
 
-/*
+#include <iostream>
+#include "Item.h"
+#include "ShoppingList.h"
+#include "ShoppingListNotifier.h"
+#include "App.h"
 
+wxIMPLEMENT_APP(App);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 int main() {
     std::cout << "Hello, World!" << std::endl;
 
@@ -29,5 +52,5 @@ int main() {
 
     list1.removeItem("Cereals");
 }
+*/
 
- */

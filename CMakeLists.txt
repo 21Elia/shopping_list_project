@@ -16,6 +16,11 @@ add_library(${PROJECT_NAME}_lib
         App.cpp
         User.cpp
         ShoppingListNotifier.cpp
+        MainController.h
+        MainController.h
+        MainController.cpp
+        DataManager.h
+        DataManager.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib ${wxWidgets_LIBRARIES})
